@@ -1,0 +1,49 @@
+# Core Flask dependencies
+Flask==3.0.3
+flask-cors==5.0.1
+Werkzeug==3.0.3
+Jinja2==3.1.4
+itsdangerous==2.2.0
+click==8.1.7
+blinker==1.8.2
+MarkupSafe==2.1.5
+
+# Production WSGI server
+gunicorn==23.0.0
+
+# PDF processing
+PyPDF2==3.0.1
+pdf2image==1.17.0
+reportlab==4.4.0
+
+# Image processing (lightweight)
+Pillow==10.2.0
+rembg==2.0.59
+
+# Document processing
+python-docx==1.1.2
+openpyxl==3.1.5
+python-pptx==1.0.2
+
+# Web scraping and requests
+requests==2.32.3
+beautifulsoup4==4.13.3
+urllib3==1.26.20
+
+# Text processing
+gTTS==2.5.4
+SpeechRecognition==3.14.1
+
+# Audio processing (lightweight alternative)
+pydub==0.25.1
+
+# Utilities
+python-dotenv==1.0.1
+python-dateutil==2.9.0.post0
+
+# Security
+cryptography==44.0.1
+
+# PDF manipulation
+PyMuPDF==1.23.9
+fpdf2==2.7.6

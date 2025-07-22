@@ -29,11 +29,24 @@ import requests
 import json
 from collections import deque
 from gtts import gTTS
-import speech_recognition as sr
 import tempfile
-from pydub import AudioSegment
 import time
 from bs4 import BeautifulSoup
+
+# Optional imports with graceful fallbacks
+try:
+    import speech_recognition as sr
+    SPEECH_RECOGNITION_AVAILABLE = True
+except ImportError:
+    SPEECH_RECOGNITION_AVAILABLE = False
+    print("Speech recognition not available - skipping speech-to-text features")
+
+try:
+    from pydub import AudioSegment
+    AUDIO_PROCESSING_AVAILABLE = True
+except ImportError:
+    AUDIO_PROCESSING_AVAILABLE = False
+    print("Audio processing not available - skipping audio features")
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for API requests
@@ -60,8 +73,11 @@ OPENROUTER_API_KEY = 'sk-or-v1-450a904c38ead712dfb7e76f69dae7a8ede0a43396867e662
 OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 OPENROUTER_MODEL = 'gpt-4o-mini'
 
-# Initialize speech recognizer for Speech to Text
-recognizer = sr.Recognizer()
+# Initialize speech recognizer for Speech to Text (if available)
+if SPEECH_RECOGNITION_AVAILABLE:
+    recognizer = sr.Recognizer()
+else:
+    recognizer = None
 
 # Document Screener global variables
 current_document_text = ''
@@ -1061,6 +1077,9 @@ def save_transcript():
 @login_required
 def upload_audio():
     try:
+        if not SPEECH_RECOGNITION_AVAILABLE or not AUDIO_PROCESSING_AVAILABLE:
+            return jsonify({'error': 'Audio processing not available in this deployment'}), 400
+            
         if 'audioFile' not in request.files:
             return jsonify({'error': 'No audio file provided'}), 400
         
