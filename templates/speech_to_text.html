@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Speech to Text App</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+        h1, h2 {
+            color: #03DAC6;
+        }
+        #textOutput, #audioTranscript {
+            width: 80%;
+            min-height: 150px;
+            background: #1f1f1f;
+            border: 1px solid #03DAC6;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            white-space: pre-wrap;
+        }
+        button {
+            margin-top: 1rem;
+            padding: 10px 20px;
+            background-color: #03DAC6;
+            border: none;
+            border-radius: 5px;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s ease;
+            box-shadow: 0 0 0px #03DAC6;
+        }
+        button:hover {
+            background-color: #018786;
+        }
+        button:active {
+            box-shadow: 0 0 15px 5px #03DAC6;
+            transform: scale(0.98);
+        }
+        input[type="file"] {
+            margin-top: 1rem;
+            color: #ffffff;
+        }
+        audio {
+            margin-top: 1rem;
+            width: 80%;
+        }
+        #status {
+            margin-top: 10px;
+            font-style: italic;
+            color: #bbb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎤 Live Speech to Text</h1>
+    <button onclick="toggleListening()">
+        <span id="listenBtnText">Start Listening</span>
+    </button>
+    <div id="textOutput"></div>
+    <button onclick="sendTranscript()">Save Transcript</button>
+
+    <h2>🎵 MP3 to Text</h2>
+    <input type="file" id="audioInput" accept=".mp3" onchange="previewAudio()">
+    <audio id="audioPlayer" controls></audio>
+    <button onclick="uploadAudio()">Transcribe Audio</button>
+    <div id="status"></div>
+    <div id="audioTranscript"></div>
+
+    <script>
+        let recognition;
+        let isListening = false;
+        let fullTranscript = "";
+
+        function initRecognition() {
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                let interim = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        fullTranscript += transcript + " ";
+                    } else {
+                        interim += transcript;
+                    }
+                }
+                document.getElementById('textOutput').textContent = fullTranscript + interim;
+            };
+
+            recognition.onend = function() {
+                if (isListening) recognition.start();
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                document.getElementById('textOutput').textContent = 'Error: ' + event.error;
+            };
+        }
+
+        function toggleListening() {
+            if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+                alert("Speech Recognition not supported in your browser.");
+                return;
+            }
+
+            if (!recognition) initRecognition();
+
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                document.getElementById("listenBtnText").textContent = "Start Listening";
+            } else {
+                recognition.start();
+                isListening = true;
+                document.getElementById("listenBtnText").textContent = "Stop Listening";
+            }
+        }
+
+        function sendTranscript() {
+            fetch('/save_transcript', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transcript: fullTranscript.trim() })
+            })
+            .then(res => res.json())
+            .then(data => alert(data.message))
+            .catch(err => {
+                console.error(err);
+                alert('Error saving transcript');
+            });
+        }
+
+        function previewAudio() {
+            const fileInput = document.getElementById('audioInput');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const url = URL.createObjectURL(file);
+                audioPlayer.src = url;
+                audioPlayer.load();
+                audioPlayer.play();
+            }
+        }
+
+        async function uploadAudio() {
+            const fileInput = document.getElementById('audioInput');
+            const status = document.getElementById('status');
+            const audioTranscriptDiv = document.getElementById('audioTranscript');
+
+            if (fileInput.files.length === 0) {
+                alert('Please select an MP3 file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audioFile', fileInput.files[0]);
+
+            try {
+                status.textContent = "⏳ Transcription in progress...";
+                audioTranscriptDiv.textContent = "";
+
+                const response = await fetch('/upload_audio', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                status.textContent = "";
+
+                if (result.transcript) {
+                    audioTranscriptDiv.textContent = result.transcript;
+                } else {
+                    audioTranscriptDiv.textContent = result.error || 'Unknown error occurred.';
+                }
+            } catch (err) {
+                status.textContent = "";
+                audioTranscriptDiv.textContent = '❌ Error uploading audio.';
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>

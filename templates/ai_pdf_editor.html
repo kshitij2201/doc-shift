@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🧠 AI PDF Editor</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #e0e6f0;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+      user-select: none;
+      background: 
+        linear-gradient(rgba(12, 16, 28, 0.75), rgba(12, 16, 28, 0.75)),
+        url('https://www.pugetsystems.com/wp-content/uploads/2024/03/ComfyUI_00021_.png') no-repeat center center fixed;
+      background-size: cover;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 3rem;
+      color: #4ade80;
+      margin-bottom: 1rem;
+      letter-spacing: 2px;
+      text-shadow: 0 0 12px #4ade80aa;
+      user-select: text;
+    }
+
+    form, .section {
+      background-color: rgba(35, 42, 78, 0.85);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      margin-top: 1.5rem;
+      box-shadow: 0 8px 15px rgba(34, 56, 104, 0.8);
+      transition: box-shadow 0.3s ease;
+      backdrop-filter: blur(8px);
+    }
+    form:hover, .section:hover {
+      box-shadow: 0 12px 25px rgba(72, 131, 255, 0.9);
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 0.4rem;
+      color: #a0b9ff;
+      user-select: text;
+    }
+
+    input[type="file"],
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      box-sizing: border-box;
+      background-color: rgba(26, 31, 61, 0.8);
+      color: #cbd5e1;
+      font-family: 'Consolas', monospace;
+      user-select: text;
+      transition: background-color 0.3s ease;
+    }
+
+    input[type="file"] {
+      cursor: pointer;
+      color: #cbd5e1;
+    }
+
+    input[type="file"]:hover {
+      background-color: rgba(40, 48, 80, 0.85);
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      background-color: rgba(40, 48, 80, 0.9);
+      box-shadow: 0 0 8px #4ade80;
+      color: #d1fae5;
+    }
+
+    textarea {
+      min-height: 300px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    button {
+      background: linear-gradient(45deg, #4ade80, #22c55e);
+      border: none;
+      padding: 0.9rem 1.2rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      color: #121212;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.15s ease;
+      user-select: none;
+      width: 100%;
+      margin-top: 1rem;
+      box-shadow: 0 6px 10px #22c55eaa;
+    }
+
+    button:hover {
+      background: linear-gradient(45deg, #22c55e, #16a34a);
+      transform: scale(1.03);
+      box-shadow: 0 8px 15px #16a34aaa;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    #suggestions {
+      background: rgba(28, 33, 64, 0.85);
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      margin-top: 1.5rem;
+      max-height: 230px;
+      overflow-y: auto;
+      font-family: 'Consolas', monospace;
+      font-size: 14px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      color: #d1fae5;
+      box-shadow: inset 0 0 10px #4ade80aa;
+      user-select: text;
+      backdrop-filter: blur(6px);
+    }
+
+    #chatHistory {
+      background: rgba(34, 40, 70, 0.9);
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      margin-top: 1.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 14px;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+    }
+
+    .footer-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.8rem;
+    }
+
+    .footer-buttons button {
+      flex: 1;
+      width: 100%;
+      max-width: none;
+    }
+
+    @media (max-width: 550px) {
+      body {
+        padding: 1rem;
+      }
+      h1 {
+        font-size: 2.2rem;
+      }
+      form, .section {
+        padding: 1rem 1.2rem;
+      }
+      button {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🧠 AI PDF Editor</h1>
+
+  <form id="uploadForm">
+    <label for="fileInput">📤 Upload your PDF document</label>
+    <input id="fileInput" type="file" name="file" accept=".pdf" required />
+    <button type="submit">🔍 Analyze Document with AI</button>
+  </form>
+
+  <div id="suggestions" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="section">
+    <label for="manualEditor">📝 Manual Editor</label>
+    <textarea id="manualEditor" placeholder="You can make manual edits here after AI analysis..." spellcheck="false"></textarea>
+  </div>
+
+  <div class="section">
+    <label for="promptInput">💬 Smart Fill Prompt</label>
+    <input
+      id="promptInput"
+      type="text"
+      placeholder="e.g. Add 'Signed on: June 19, 2025' below Signature"
+    />
+    <button onclick="sendPrompt()">🤖 Fill with AI Instruction</button>
+  </div>
+
+  <div class="section" id="chatHistory"><strong>📜 Previous Prompts:</strong><br><br></div>
+
+  <div class="footer-buttons">
+    <button onclick="saveEdits()">📥 Download Edited PDF</button>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const chatHistory = document.getElementById('chatHistory');
+    let previousPrompts = [];
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      try {
+        const res = await fetch('/analyze', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!res.ok) throw new Error('Failed to analyze document');
+        const data = await res.json();
+        document.getElementById('manualEditor').value = data.text;
+        document.getElementById('suggestions').innerText =
+          '🧠 AI Suggestions:\n\n' + data.suggestions;
+      } catch (err) {
+        alert('❌ Error: ' + err.message);
+      }
+    });
+
+    async function saveEdits() {
+      const updated_text = document.getElementById('manualEditor').value;
+      try {
+        const res = await fetch('/edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ updated_text }),
+        });
+        if (!res.ok) throw new Error('Failed to generate PDF');
+        const blob = await res.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'edited_document.pdf';
+        a.click();
+      } catch (err) {
+        alert('❌ Error: ' + err.message);
+      }
+    }
+
+    async function sendPrompt() {
+      const user_prompt = document.getElementById('promptInput').value.trim();
+      if (!user_prompt) {
+        alert('⚠️ Please enter a prompt instruction.');
+        return;
+      }
+      try {
+        const res = await fetch('/fill_from_prompt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_prompt }),
+        });
+        if (!res.ok) throw new Error('Failed to fill content from prompt');
+        const data = await res.json();
+        document.getElementById('manualEditor').value = data.updated_text;
+        previousPrompts.push(user_prompt);
+        updateChatHistory();
+        document.getElementById('promptInput').value = '';
+        document.getElementById('suggestions').innerText =
+          '✅ Content updated successfully using your instruction.';
+      } catch (err) {
+        alert('❌ Error: ' + err.message);
+      }
+    }
+
+    function updateChatHistory() {
+      chatHistory.innerHTML =
+        '<strong>📜 Previous Prompts:</strong><br><br>' +
+        previousPrompts.map((p, i) => `${i + 1}. ${p}`).join('<br>');
+    }
+  </script>
+</body>
+</html>

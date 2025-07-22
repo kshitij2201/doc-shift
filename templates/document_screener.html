@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Screener App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col items-center p-6">
+    <h1 class="text-3xl font-bold text-teal-400 mb-6">📄 Document Screener</h1>
+    
+    <div class="w-full max-w-2xl space-y-4">
+        <input type="file" id="docInput" accept=".pdf,.docx,.txt" onchange="previewFile()" 
+               class="w-full p-3 bg-gray-700 border border-teal-500 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+        
+        <select id="formatSelect" class="w-full p-3 bg-gray-700 border border-teal-500 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+            <option value="paragraph">Paragraph</option>
+            <option value="points">Bullet Points</option>
+        </select>
+        
+        <button onclick="analyzeDocument()" 
+                class="w-full py-3 bg-teal-500 text-black font-semibold rounded-lg hover:bg-teal-600 active:ring-2 active:ring-teal-400 transition duration-200">
+            Analyze Document
+        </button>
+        
+        <div id="status" class="text-sm italic text-gray-400"></div>
+        
+        <div id="analysisOutput" 
+             class="w-full min-h-[150px] p-4 bg-gray-700 border border-teal-500 rounded-lg text-white overflow-y-auto"></div>
+        
+        <h2 class="text-2xl font-bold text-teal-400 mt-8 mb-4">💬 Chat About Document</h2>
+        
+        <div class="flex space-x-2">
+            <input type="text" id="chatInput" placeholder="Ask about the document (e.g., 'Who is mentioned?')" 
+                   onkeypress="if(event.key === 'Enter') sendChatMessage()"
+                   class="flex-1 p-3 bg-gray-700 border border-teal-500 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+            <button onclick="sendChatMessage()" 
+                    class="py-3 px-6 bg-teal-500 text-black font-semibold rounded-lg hover:bg-teal-600 active:ring-2 active:ring-teal-400 transition duration-200">
+                Send
+            </button>
+        </div>
+        
+        <div id="chatMessages" 
+             class="w-full min-h-[150px] p-4 bg-gray-700 border border-teal-500 rounded-lg text-white overflow-y-auto"></div>
+    </div>
+
+    <script>
+        function previewFile() {
+            const fileInput = document.getElementById('docInput');
+            const status = document.getElementById('status');
+            if (fileInput.files.length > 0) {
+                status.textContent = `Selected file: ${fileInput.files[0].name}`;
+            } else {
+                status.textContent = '';
+            }
+        }
+
+        async function analyzeDocument() {
+            const fileInput = document.getElementById('docInput');
+            const formatSelect = document.getElementById('formatSelect');
+            const status = document.getElementById('status');
+            const analysisOutput = document.getElementById('analysisOutput');
+
+            if (fileInput.files.length === 0) {
+                alert('Please select a document.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('docFile', fileInput.files[0]);
+            formData.append('format', formatSelect.value);
+
+            try {
+                status.textContent = "⏳ Analyzing document...";
+                analysisOutput.textContent = "";
+                document.getElementById('chatMessages').innerHTML = "";
+
+                const response = await fetch('/analyze_document', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                status.textContent = "";
+
+                if (result.analysis) {
+                    analysisOutput.textContent = result.analysis;
+                } else {
+                    analysisOutput.textContent = result.error || 'Unknown error occurred.';
+                }
+            } catch (err) {
+                status.textContent = "";
+                analysisOutput.textContent = '❌ Error analyzing document.';
+                console.error(err);
+            }
+        }
+
+        async function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const chatMessages = document.getElementById('chatMessages');
+            const message = chatInput.value.trim();
+
+            if (!message) {
+                alert('Please enter a message.');
+                return;
+            }
+
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user-message text-teal-400 font-semibold';
+            userMessage.textContent = `You: ${message}`;
+            chatMessages.appendChild(userMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            chatInput.value = '';
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+
+                const result = await response.json();
+
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot-message text-white';
+                botMessage.textContent = `Bot: ${result.response || result.error || 'Unknown error occurred.'}`;
+                chatMessages.appendChild(botMessage);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } catch (err) {
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot-message text-white';
+                botMessage.textContent = 'Bot: ❌ Error sending message.';
+                chatMessages.appendChild(botMessage);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>

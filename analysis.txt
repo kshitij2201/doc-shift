@@ -1,0 +1,5 @@
+File: Arambh_resume_latest.pdf
+Format: paragraph
+Analysis:
+ The document appears to be a resume or curriculum vitae for a student named Arambh Chitriv, who is currently pursuing a Bachelor of Technology degree in Data Science at G H Raisoni College Of Engineering And Management in Nagpur, India, set to graduate in 2025. Arambh has completed various data science projects, including AI-powered chatbots, attendance management systems, and fish species identification applications, using tools such as Python, Streamlit, Firebase, Roboﬂow, and Power BI. Arambh has also completed internships at TARS TECHNOLOGIES and CodeAlpha, where they used Python for data analysis, model building, and A/B testing analysis. Their skills include Python, C/C++, HTML, problem-solving, quick learning, good communication, and data analytics and visualization. Arambh is currently working on an AI-powered 2D avatar chatbot and has developed an attendance management system and a fish species identification system.
+

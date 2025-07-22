@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text to Speech</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(145deg, #1e1e2f, #2b2b45);
+      color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: #2e2e40;
+      padding: 40px 30px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      width: 90%;
+      max-width: 600px;
+      transition: 0.3s ease-in-out;
+    }
+
+    h2 {
+      text-align: center;
+      color: #93a5ff;
+      font-size: 1.8rem;
+      margin-bottom: 25px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 160px;
+      padding: 15px;
+      font-size: 1rem;
+      color: #fff;
+      background: #3c3c5c;
+      border: none;
+      border-radius: 12px;
+      resize: vertical;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    textarea:focus {
+      background: #444466;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      background: #7f8bff;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #99a5ff;
+    }
+
+    #audioContainer {
+      display: none;
+      margin-top: 25px;
+      text-align: center;
+    }
+
+    #loading {
+      margin-top: 15px;
+      font-style: italic;
+      text-align: center;
+    }
+
+    audio {
+      margin-top: 10px;
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    #downloadLink {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 16px;
+      background-color: #5a65f1;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: 0.3s ease;
+    }
+
+    #downloadLink:hover {
+      background-color: #727eff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🎙️ Text to Speech Converter</h2>
+
+    <textarea id="textInput" placeholder="Type or paste your text here..."></textarea>
+    <button onclick="generateTTS()">🔊 Generate Audio</button>
+
+    <div id="loading"></div>
+
+    <div id="audioContainer">
+      <a id="downloadLink" href="#" download>⬇️ Download Audio</a>
+      <audio controls id="audioPlayer"></audio>
+    </div>
+  </div>
+
+  <script>
+    async function generateTTS() {
+      const text = document.getElementById('textInput').value.trim();
+      const loading = document.getElementById('loading');
+      const audioContainer = document.getElementById('audioContainer');
+      const audioPlayer = document.getElementById('audioPlayer');
+      const downloadLink = document.getElementById('downloadLink');
+
+      if (!text) {
+        alert("Please enter some text.");
+        return;
+      }
+
+      loading.textContent = "⏳ Generating audio... Please wait.";
+      audioContainer.style.display = "none";
+
+      try {
+        const res = await fetch("/generate_tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await res.json();
+
+        if (data.audio_url) {
+          audioPlayer.src = data.audio_url;
+          downloadLink.href = data.audio_url;
+          audioContainer.style.display = "block";
+        } else {
+          alert("Something went wrong.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error generating audio.");
+      } finally {
+        loading.textContent = "";
+      }
+    }
+  </script>
+</body>
+</html>

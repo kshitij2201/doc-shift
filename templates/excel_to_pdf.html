@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel to PDF - TARS DocShift</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e2f;
+            color: #f1f1f1;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        nav {
+            background-color: #2c2c2c;
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .nav-logo {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .nav-logo a {
+            color: #f1f1f1;
+            text-decoration: none;
+        }
+
+        .nav-logo a:hover {
+            color: #70a1ff;
+        }
+
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav ul li {
+            position: relative;
+            display: inline;
+        }
+
+        nav ul li a {
+            color: #f1f1f1;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        nav ul li a:hover {
+            color: #70a1ff;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            color: #f1f1f1;
+            font-weight: bold;
+        }
+
+        .dropdown-toggle::after {
+            content: '▼';
+            font-size: 0.8em;
+            color: #f1f1f1;
+            transition: transform 0.3s ease;
+        }
+
+        .dropdown:hover .dropdown-toggle::after {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #343434;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            padding: 10px 0;
+            min-width: 200px;
+            z-index: 1000;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-menu li {
+            display: block;
+            padding: 10px 20px;
+        }
+
+        .dropdown-menu li a {
+            color: #f1f1f1;
+            font-weight: normal;
+            display: block;
+        }
+
+        .dropdown-menu li a:hover {
+            color: #70a1ff;
+            background-color: #2c2c2c;
+        }
+
+        .container {
+            background-color: #2b2b3c;
+            padding: 30px 25px;
+            max-width: 450px;
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            margin: 60px auto 0;
+        }
+
+        h1 {
+            margin-bottom: 25px;
+            font-size: 24px;
+            color: #ffffff;
+        }
+
+        .upload-section {
+            margin: 20px 0;
+        }
+
+        input[type="file"] {
+            margin-top: 10px;
+            display: block;
+            width: 100%;
+            font-size: 15px;
+            color: #ccc;
+            background-color: #3a3a4d;
+            border: 1px solid #555;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        input[type="file"]::file-selector-button {
+            background-color: #444a61;
+            border: none;
+            padding: 8px 14px;
+            color: #f1f1f1;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-right: 10px;
+            transition: background 0.3s ease;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background-color: #59607a;
+        }
+
+        .file-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        .remove-btn {
+            background-color: #ff4757;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: background-color 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background-color: #e84150;
+        }
+
+        button {
+            background-color: #ff4757;
+            color: #fff;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #e84150;
+        }
+
+        .error {
+            color: #ff6b81;
+            margin-top: 10px;
+        }
+
+        .success {
+            color: #2ed573;
+            margin-top: 10px;
+        }
+
+        a.back {
+            display: inline-block;
+            margin-top: 20px;
+            color: #70a1ff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        a.back:hover {
+            color: #a4caff;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #2c2c2c;
+            color: #f1f1f1;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 20px;
+            }
+
+            .nav-logo {
+                margin-bottom: 10px;
+            }
+
+            nav ul {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            nav ul li {
+                display: block;
+                width: 100%;
+            }
+
+            .dropdown-menu {
+                position: static;
+                width: 100%;
+                box-shadow: none;
+                background-color: #2c2c2c;
+            }
+
+            .dropdown-menu li {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 20px;
+                margin-top: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-logo">
+            <a href="/">TARS DocShift</a>
+        </div>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li class="dropdown">
+                <span class="dropdown-toggle">ALL TOOLS</span>
+                <ul class="dropdown-menu">
+                    <li><a href="/image-to-pdf">Image to PDF</a></li>
+                    <li><a href="/pdf-to-image">PDF to Image</a></li>
+                    <li><a href="/merge-pdfs">Merge PDFs</a></li>
+                    <li><a href="/word-to-pdf">Word to PDF</a></li>
+                    <li><a href="/excel-to-pdf">Excel to PDF</a></li>
+                    <li><a href="/pdf-to-ppt">PDF to PPT</a></li>
+                    <li><a href="/bg-remover">Background Remover</a></li>
+                    <li><a href="/remove-pages-ui">Remove Pages</a></li>
+                    <li><a href="/compress-pdf">Compress PDF</a></li>
+                    <li><a href="/split-pdf">Split PDF</a></li>
+                </ul>
+            </li>
+            <li><a href="/admin-logs">Admin Logs</a></li>
+            <li><a href="/logout">Logout</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <h1>Excel to PDF Converter</h1>
+        <form id="excelToPdfForm" enctype="multipart/form-data">
+            <div class="upload-section">
+                <input type="file" id="excel" name="file" accept=".xlsx">
+            </div>
+            <div class="file-display" id="fileDisplay" style="display: none;">
+                <span id="fileName"></span>
+                <button type="button" class="remove-btn" id="removeFile">Remove</button>
+            </div>
+            <button type="button" id="convertButton">Convert to PDF</button>
+        </form>
+        <div id="statusMessage"></div>
+        <a href="/" class="back">← Back to Home</a>
+    </div>
+    <footer>
+        © 2025 TARS DocShift. All rights reserved.
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            function setStatus(message, isError = false) {
+                const status = document.getElementById('statusMessage');
+                if (!status) return;
+                status.textContent = message;
+                status.className = isError ? 'error' : 'success';
+            }
+
+            function updateFileDisplay() {
+                const fileInput = document.getElementById('excel');
+                const fileDisplay = document.getElementById('fileDisplay');
+                const fileNameSpan = document.getElementById('fileName');
+
+                if (!fileInput || !fileDisplay || !fileNameSpan) return;
+
+                if (fileInput.files.length > 0) {
+                    const fileNames = Array.from(fileInput.files).map(file => file.name).join(', ');
+                    fileNameSpan.textContent = fileNames;
+                    fileDisplay.style.display = 'flex';
+                } else {
+                    fileNameSpan.textContent = '';
+                    fileDisplay.style.display = 'none';
+                }
+            }
+
+            function removeFile() {
+                const fileInput = document.getElementById('excel');
+                if (!fileInput) return;
+                fileInput.value = '';
+                setStatus('');
+                updateFileDisplay();
+            }
+
+            function convertExcelToPDF() {
+                const fileInput = document.getElementById('excel');
+                const convertButton = document.getElementById('convertButton');
+
+                if (!fileInput.files.length) {
+                    setStatus('Please select an Excel file.', true);
+                    return;
+                }
+
+                const form = document.getElementById('excelToPdfForm');
+                const formData = new FormData(form);
+
+                convertButton.disabled = true;
+                setStatus('Processing...', false);
+
+                fetch('/convert_excel_to_pdf', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.error || 'Unknown error'); });
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'converted.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    setStatus('Conversion successful! File downloaded.');
+                    removeFile();
+                })
+                .catch(err => {
+                    setStatus('Conversion failed: ' + err.message, true);
+                })
+                .finally(() => {
+                    convertButton.disabled = false;
+                });
+            }
+
+            const fileInput = document.getElementById('excel');
+            const removeButton = document.getElementById('removeFile');
+            const convertButton = document.getElementById('convertButton');
+
+            if (fileInput) {
+                fileInput.addEventListener('change', updateFileDisplay);
+            }
+
+            if (removeButton) {
+                removeButton.addEventListener('click', removeFile);
+            }
+
+            if (convertButton) {
+                convertButton.addEventListener('click', convertExcelToPDF);
+            }
+        });
+    </script>
+</body>
+</html>
