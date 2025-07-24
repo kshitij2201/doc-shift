@@ -69,7 +69,7 @@ os.makedirs(STATIC_FOLDER, exist_ok=True)
 os.makedirs(AUDIO_FOLDER, exist_ok=True)
 
 # OpenRouter API configuration
-OPENROUTER_API_KEY = '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'
+OPENROUTER_API_KEY = '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'
 OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 OPENROUTER_MODEL = 'gpt-4o-mini'
 
