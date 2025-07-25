@@ -49,7 +49,9 @@ except ImportError:
     print("Audio processing not available - skipping audio features")
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for API requests
+# Configure CORS to allow requests from anywhere
+CORS(app, origins="*", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+     allow_headers=["Content-Type", "Authorization", "X-Requested-With"])
 app.secret_key = os.urandom(24)
 
 # Configure logging
@@ -320,6 +322,25 @@ def retry_api_request(url, headers, data, max_retries=3, delay=2):
             time.sleep(delay)
             delay *= 2
     raise Exception("Max retries exceeded for API request")
+
+# Add CORS headers to all responses
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+
+# Handle preflight requests
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = jsonify({'message': 'OK'})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "*")
+        response.headers.add('Access-Control-Allow-Methods', "*")
+        return response
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
